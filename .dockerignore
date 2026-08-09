@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.data
+npm-debug.log
+Dockerfile
+.dockerignore
+*.zip
+flow*.mjs
+dbtest.mjs
+README-COOLIFY.md
+.DS_Store

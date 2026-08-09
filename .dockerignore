@@ -2,6 +2,9 @@ node_modules
 .next
 .git
 .data
+_a_supprimer
+_extract*
+_tmp
 npm-debug.log
 Dockerfile
 .dockerignore

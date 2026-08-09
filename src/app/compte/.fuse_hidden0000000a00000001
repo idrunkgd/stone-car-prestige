@@ -140,7 +140,7 @@ async function MyRequests({ accountId }: { accountId: string }) {
             </div>
             {r.status === "devis_envoye" && r.devisId && (
               <Link href={`/compte/devis/${r.devisId}`} className="mt-3 flex items-center justify-center gap-1.5 rounded-lg bg-gold-grad py-2.5 font-display text-xs uppercase tracking-wide text-[#1a1400] shadow-gold">
-                Voir le détail du devis <ArrowRight size={14} />
+                Accepter le devis <ArrowRight size={14} />
               </Link>
             )}
             {r.status === "accepte" && (

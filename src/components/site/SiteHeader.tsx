@@ -5,11 +5,13 @@ import { Phone, Menu, X } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils";
 
+// Liens vers les sections de la page d'accueil, préfixés par "/" pour qu'ils
+// fonctionnent depuis n'importe quelle page (compte, demande de prix, devis…).
 const LINKS = [
-  { href: "#prestations", label: "Prestations" },
-  { href: "#realisations", label: "Réalisations" },
-  { href: "#tarifs", label: "Tarifs" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#prestations", label: "Prestations" },
+  { href: "/#realisations", label: "Réalisations" },
+  { href: "/#tarifs", label: "Tarifs" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export function SiteHeader() {
@@ -33,7 +35,7 @@ export function SiteHeader() {
       )}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
-        <a href="#top" className="flex items-center gap-2.5">
+        <a href="/" className="flex items-center gap-2.5">
           <Logo size={34} />
           <span className="font-display text-sm uppercase leading-none tracking-wide">
             Stone Car

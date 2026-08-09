@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, Menu, X } from "lucide-react";
+import { Phone, Menu, X, Briefcase } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +65,12 @@ export function SiteHeader() {
             Mon compte
           </a>
           <a
+            href="/app"
+            className="hidden items-center gap-1.5 rounded-xl border border-line-gold px-3.5 py-2 text-sm text-gold-1 transition-colors hover:bg-gold/[0.08] sm:flex"
+          >
+            <Briefcase size={15} /> Espace pro
+          </a>
+          <a
             href="/compte"
             className="rounded-xl bg-gold-grad px-4 py-2.5 font-display text-sm uppercase tracking-wide text-[#1a1400] shadow-gold"
           >
@@ -93,6 +99,13 @@ export function SiteHeader() {
                 {l.label}
               </a>
             ))}
+            <a
+              href="/app"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 text-gold-1"
+            >
+              <Briefcase size={15} /> Espace pro
+            </a>
             <a href="tel:0499912932" className="flex items-center gap-2 text-ink-muted">
               <Phone size={15} /> 0499 91 29 32
             </a>

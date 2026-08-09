@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Globe } from "lucide-react";
 import { NAV } from "@/lib/nav";
 import { Logo } from "./Logo";
 import { logoutAdminAction } from "@/app/connexion-pro/actions";
@@ -17,6 +17,14 @@ export function Sidebar() {
       <Link href="/app" className="mb-3.5">
         <Logo />
       </Link>
+      <a
+        href="/"
+        title="Voir le site"
+        className="mb-1 flex h-12 w-12 flex-col items-center justify-center gap-0.5 rounded-[13px] border border-line-gold text-gold-1 transition-colors hover:bg-gold/[0.08]"
+      >
+        <Globe size={20} strokeWidth={1.8} />
+        <span className="text-[8.5px] uppercase tracking-tight">Site</span>
+      </a>
       {NAV.map((item) => {
         const active =
           item.href === "/app"

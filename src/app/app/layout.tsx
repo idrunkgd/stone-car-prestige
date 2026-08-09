@@ -1,11 +1,18 @@
+import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomBar } from "@/components/layout/BottomBar";
+import { isAdmin } from "@/lib/admin-auth";
 
-export default function AppLayout({
+export const dynamic = "force-dynamic";
+
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Espace pro protégé : redirige vers la connexion si non authentifié.
+  if (!(await isAdmin())) redirect("/connexion-pro");
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />

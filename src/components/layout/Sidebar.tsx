@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { NAV } from "@/lib/nav";
 import { Logo } from "./Logo";
+import { logoutAdminAction } from "@/app/connexion-pro/actions";
 import { cn } from "@/lib/utils";
 
 /** Barre latérale rétractable (masquée sur mobile → BottomBar). */
@@ -44,6 +46,16 @@ export function Sidebar() {
           </Link>
         );
       })}
+      <form action={logoutAdminAction} className="mt-1">
+        <button
+          type="submit"
+          title="Déconnexion"
+          className="flex h-12 w-12 flex-col items-center justify-center gap-0.5 rounded-[13px] text-ink-faint transition-colors hover:text-state-red"
+        >
+          <LogOut size={20} strokeWidth={1.8} />
+          <span className="text-[8.5px] uppercase tracking-tight">Quitter</span>
+        </button>
+      </form>
     </aside>
   );
 }

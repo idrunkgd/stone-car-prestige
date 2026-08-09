@@ -52,31 +52,13 @@ export type Appointment = {
   progress?: number; // 0..1
 };
 
-export const customers: Customer[] = [
-  { id: "c1", firstName: "Jean", lastName: "Dupont", phone: "0499 11 22 33", email: "jean.dupont@example.be", visits: 5, totalSpent: 1240, lastVisitDaysAgo: 42, tag: "regulier" },
-  { id: "c2", firstName: "Sophie", lastName: "Lambert", phone: "0498 55 44 21", email: "sophie.lambert@example.be", visits: 12, totalSpent: 3980, lastVisitDaysAgo: 6, tag: "vip" },
-  { id: "c3", firstName: "Marc", lastName: "Lefèvre", phone: "0472 88 90 10", email: "marc.lefevre@example.be", visits: 3, totalSpent: 720, lastVisitDaysAgo: 15, tag: "regulier" },
-  { id: "c4", firstName: "Laura", lastName: "Moreau", phone: "0471 20 30 40", email: "laura.moreau@example.be", visits: 1, totalSpent: 125, lastVisitDaysAgo: 2, tag: "nouveau" },
-  { id: "c5", firstName: "David", lastName: "Nguyen", phone: "0475 12 34 56", email: "david.nguyen@example.be", visits: 8, totalSpent: 2110, lastVisitDaysAgo: 120, tag: "inactif" },
-];
+// Démarrage à vide : aucune donnée d'exemple. Les vrais clients, véhicules et
+// rendez-vous proviennent de la base de données (crm-store, request-store, …).
+export const customers: Customer[] = [];
 
-export const vehicles: Vehicle[] = [
-  { id: "v1", make: "BMW", model: "M340i", plate: "1-ABC-123", category: "berline", color: "Noir Saphir", ownerId: "c1" },
-  { id: "v2", make: "Audi", model: "Q5", plate: "2-ABX-114", category: "suv", color: "Gris Daytona", ownerId: "c3" },
-  { id: "v3", make: "Porsche", model: "Macan", plate: "1-QRP-552", category: "suv", color: "Blanc Carrara", ownerId: "c3" },
-  { id: "v4", make: "Mercedes", model: "GLC", plate: "1-FDE-201", category: "suv", color: "Bleu Cavansite", ownerId: "c5" },
-  { id: "v5", make: "Volkswagen", model: "Golf GTI", plate: "1-GTI-777", category: "sportive", color: "Rouge Tornado", ownerId: "c2" },
-  { id: "v6", make: "Audi", model: "RS3", plate: "1-RS3-045", category: "sportive", color: "Vert Kyalami", ownerId: "c4" },
-];
+export const vehicles: Vehicle[] = [];
 
-export const todaysAppointments: Appointment[] = [
-  { id: "a1", time: "08:00", vehicleId: "v1", customerId: "c1", service: "Lavage Premium", status: "RECU", priceEstimate: 145 },
-  { id: "a2", time: "09:30", vehicleId: "v2", customerId: "c3", service: "Intérieur complet", status: "CONFIRME", priceEstimate: 120 },
-  { id: "a3", time: "10:00", vehicleId: "v3", customerId: "c3", service: "Detailing complet", status: "EN_COURS", priceEstimate: 240, workedMinutes: 92, progress: 0.62 },
-  { id: "a4", time: "11:15", vehicleId: "v4", customerId: "c5", service: "Nettoyage moteur + Jantes", status: "EN_ATTENTE", priceEstimate: 95 },
-  { id: "a5", time: "14:00", vehicleId: "v5", customerId: "c2", service: "Lavage extérieur", status: "PRET", priceEstimate: 125 },
-  { id: "a6", time: "15:30", vehicleId: "v6", customerId: "c4", service: "Nettoyage complet", status: "CONFIRME", priceEstimate: 125 },
-];
+export const todaysAppointments: Appointment[] = [];
 
 /* Helpers de lecture (imitent les futures requêtes Prisma) */
 

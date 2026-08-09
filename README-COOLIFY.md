@@ -127,20 +127,27 @@ migrer, rien à initialiser.
 
 ---
 
-## ⚠️ Important : sécuriser l'accès pro
+## Accès administrateur (espace pro)
 
-Pour l'instant, l'espace professionnel **`/app/...`** n'est protégé par aucun
-mot de passe : toute personne connaissant l'URL peut y accéder. Sur un
-serveur public, ce n'est pas souhaitable.
+L'espace professionnel **`/app/...`** est protégé par une connexion. Tant que
+tu n'es pas identifié, toute visite de `/app` renvoie vers **`/connexion-pro`**.
 
-Deux options simples (dis-moi laquelle tu préfères, je te la mets en place) :
+Identifiants par défaut :
 
-- un **mot de passe unique** pour tout l'espace `/app` (rapide) ;
-- un **vrai compte administrateur** (email + mot de passe) séparé des comptes
-  clients.
+- **Email** : `stone@stone.be`
+- **Mot de passe** : `Azerty12`
 
-En attendant, tu peux aussi restreindre l'accès au niveau de Coolify
-(Basic Auth) si tu veux verrouiller tout de suite.
+**Change le mot de passe en production.** Dans Coolify → app →
+**Environment Variables**, ajoute :
+
+| Nom              | Valeur                          |
+|------------------|---------------------------------|
+| `ADMIN_EMAIL`    | ton email d'admin               |
+| `ADMIN_PASSWORD` | un mot de passe fort à toi      |
+
+Puis redéploie. Changer le mot de passe déconnecte automatiquement les
+sessions existantes. Les comptes **clients** (espace `/compte`) sont
+totalement séparés de cet accès admin.
 
 ---
 

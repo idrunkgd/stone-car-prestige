@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
-import { BeforeAfter } from "@/components/site/BeforeAfter";
 import { Reveal } from "@/components/site/Reveal";
 import { CarSilhouette } from "@/components/CarSilhouette";
 
@@ -48,10 +47,13 @@ const PACKAGES = [
   { name: "Signature", price: "180", desc: "Le grand jeu", feats: ["Lavage premium", "Protection hydrophobe", "Détails & finitions premium"], highlight: false },
 ];
 
-const AVIS = [
-  { n: "Julien D.", t: "Voiture méconnaissable après un detailing complet. Travail minutieux, je recommande." },
-  { n: "Sarah L.", t: "Accueil au top et résultat impeccable. On sent le vrai souci du détail." },
-  { n: "Marc V.", t: "Intérieur comme neuf, service premium. Rapport qualité-prix excellent." },
+const VITRAGE = [
+  { icon: Car, t: "Pare-brise", d: "Remplacement complet, toutes marques et tous modèles." },
+  { icon: Wrench, t: "Réparation d'impact", d: "Intervention rapide avant que la fissure ne se propage." },
+  { icon: Sparkles, t: "Vitres latérales", d: "Remplacement des vitres avant et arrière." },
+  { icon: ShieldCheck, t: "Lunette arrière", d: "Remplacement, dégivrage et antenne intégrés." },
+  { icon: Gem, t: "Toit ouvrant / panoramique", d: "Remplacement et étanchéité du vitrage de toit." },
+  { icon: BadgeCheck, t: "Calibrage caméras", d: "Recalibrage des aides à la conduite après la pose." },
 ];
 
 export default function HomePage() {
@@ -154,26 +156,52 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* REALISATIONS / AVANT-APRÈS */}
+      {/* REALISATIONS / VITRAGE */}
       <section id="realisations" className="mx-auto max-w-6xl px-5 py-24">
         <Reveal className="mb-10 text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-gold-2">Réalisations</div>
           <h2 className="mt-2 font-display text-4xl uppercase sm:text-5xl">
-            Le résultat parle de lui-même
+            Vitrage — tout véhicule
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-ink-muted">
-            Glissez pour comparer l'avant et l'après.
+            Remplacement et réparation de vitrage, tout véhicule — sur devis.
           </p>
         </Reveal>
-        <Reveal>
-          <BeforeAfter
-            before="/realisations/ext-avant.jpg"
-            after="/realisations/ext-apres.jpg"
-            aspect="aspect-[16/9]"
-          />
-          <p className="mt-3 text-center text-sm text-ink-muted">
-            Extérieur · Audi A5 — lavage &amp; brillance retrouvée
-          </p>
+
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {VITRAGE.map((v, i) => {
+            const Icon = v.icon;
+            return (
+              <Reveal key={v.t} delay={i * 60}>
+                <div className="flex h-full flex-col rounded-2xl border border-line-soft bg-night-panel p-7 transition-colors hover:border-line-gold">
+                  <Icon className="text-gold-1" size={26} />
+                  <h3 className="mt-4 font-display text-lg uppercase">{v.t}</h3>
+                  <p className="mt-2 text-sm text-ink-muted">{v.d}</p>
+                  <span className="mt-4 inline-block w-fit rounded-full border border-line-gold bg-gold/[0.08] px-3 py-1 font-display text-[10px] uppercase tracking-widest text-gold-1">
+                    Sur devis
+                  </span>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        {/* dalle longue transversale */}
+        <Reveal delay={120}>
+          <div className="mt-5 flex flex-col items-center justify-between gap-5 rounded-2xl border border-line-gold bg-gradient-to-r from-gold/10 to-transparent p-8 sm:flex-row">
+            <div>
+              <h3 className="font-display text-2xl uppercase">Remplacement &amp; réparation de vitrage</h3>
+              <p className="mt-1 text-sm text-ink-muted">
+                Pare-brise, vitres, lunette, toit — tout véhicule. Devis rapide et sans engagement.
+              </p>
+            </div>
+            <a
+              href="/compte"
+              className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-gold-grad px-6 py-3 font-display text-sm uppercase tracking-wide text-[#1a1400] shadow-gold"
+            >
+              Demander un devis <ArrowRight size={16} />
+            </a>
+          </div>
         </Reveal>
       </section>
 
@@ -250,33 +278,6 @@ export default function HomePage() {
               </div>
             </Reveal>
           ))}
-        </div>
-      </section>
-
-      {/* AVIS */}
-      <section className="border-y border-line-soft bg-night-2">
-        <div className="mx-auto max-w-6xl px-5 py-24">
-          <Reveal className="mb-12 text-center">
-            <div className="text-xs uppercase tracking-[0.3em] text-gold-2">Avis clients</div>
-            <h2 className="mt-2 font-display text-4xl uppercase sm:text-5xl">Ils nous font confiance</h2>
-          </Reveal>
-          <div className="grid gap-6 lg:grid-cols-3">
-            {AVIS.map((a, i) => (
-              <Reveal key={a.n} delay={i * 70}>
-                <div className="h-full rounded-2xl border border-line-soft bg-night-panel p-7">
-                  <div className="mb-3 flex text-gold-1">
-                    {Array.from({ length: 5 }).map((_, k) => (
-                      <Star key={k} size={15} className="fill-gold-1" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-ink">“{a.t}”</p>
-                  <div className="mt-4 font-display text-sm uppercase tracking-wide text-gold-2">
-                    {a.n}
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
         </div>
       </section>
 

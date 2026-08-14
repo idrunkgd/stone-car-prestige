@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 // fonctionnent depuis n'importe quelle page (compte, demande de prix, devis…).
 const LINKS = [
   { href: "/#prestations", label: "Prestations" },
-  { href: "/#realisations", label: "Réalisations" },
   { href: "/#tarifs", label: "Tarifs" },
+  { href: "/realisations", label: "Réalisations" },
   { href: "/#contact", label: "Contact" },
 ];
 

@@ -16,7 +16,11 @@ import {
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
-import { CarSilhouette } from "@/components/CarSilhouette";
+import { getFormules } from "@/lib/formule-store";
+import { getServices } from "@/lib/service-catalog-store";
+import { startingPrice } from "@/lib/pricing";
+
+export const dynamic = "force-dynamic";
 
 const SERVICES = [
   { icon: Droplets, name: "Lavage complet", desc: "Intérieur & extérieur, nettoyage en profondeur pour un résultat impeccable." },
@@ -41,12 +45,6 @@ const STEPS = [
   { n: "4", t: "Repartez impeccable", d: "Un véhicule transformé, comme neuf." },
 ];
 
-const PACKAGES = [
-  { name: "Essential", price: "35", desc: "Extérieur + aspirateur", feats: ["Lavage extérieur soigné", "Aspiration habitacle", "Vitres & jantes"], highlight: false },
-  { name: "Premium", price: "90", desc: "Extérieur + intérieur complet", feats: ["Tout l'Essential", "Nettoyage intérieur complet", "Plastiques & finitions"], highlight: true },
-  { name: "Signature", price: "180", desc: "Le grand jeu", feats: ["Lavage premium", "Protection hydrophobe", "Détails & finitions premium"], highlight: false },
-];
-
 const VITRAGE = [
   { icon: Car, t: "Pare-brise", d: "Remplacement complet, toutes marques et tous modèles." },
   { icon: Wrench, t: "Réparation d'impact", d: "Intervention rapide avant que la fissure ne se propage." },
@@ -56,17 +54,34 @@ const VITRAGE = [
   { icon: BadgeCheck, t: "Calibrage caméras", d: "Recalibrage des aides à la conduite après la pose." },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [formules, services] = await Promise.all([getFormules(), getServices()]);
+  const serviceMap = new Map(services.map((s) => [s.id, s]));
+  const horsFormule = services.filter((s) => s.horsFormule && s.active !== false);
+  const formulePrice = (ids: string[]) =>
+    ids.reduce((sum, id) => {
+      const sv = serviceMap.get(id);
+      return sum + (sv ? startingPrice(sv) : 0);
+    }, 0);
+
   return (
     <div id="top">
       <SiteHeader />
 
       {/* HERO */}
       <section className="relative flex min-h-screen items-center overflow-hidden px-5 pt-24">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_75%_-10%,rgba(201,162,39,0.16),transparent_55%)]" />
-        <div className="pointer-events-none absolute -right-10 bottom-10 opacity-[0.08]">
-          <CarSilhouette width={720} />
+        {/* Photo de fond — Chrysler 300C dans le décor Stone Car Prestige */}
+        <div className="pointer-events-none absolute inset-0">
+          <img
+            src="/hero-car.jpg"
+            alt=""
+            className="h-full w-full object-cover object-center opacity-45"
+          />
+          {/* Fondus pour que la photo s'imprègne dans le thème sombre */}
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#0C0C0E_0%,rgba(12,12,14,0.86)_34%,rgba(12,12,14,0.30)_66%,rgba(12,12,14,0.66)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,#0C0C0E_0%,transparent_40%,transparent_72%,rgba(12,12,14,0.75)_100%)]" />
         </div>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_75%_-10%,rgba(201,162,39,0.16),transparent_55%)]" />
         <div className="relative mx-auto w-full max-w-6xl">
           <div className="max-w-2xl animate-fade-up">
             <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-line-gold bg-gold/[0.06] px-4 py-1.5 text-xs uppercase tracking-widest text-gold-1">
@@ -107,7 +122,12 @@ export default function HomePage() {
       </section>
 
       {/* PRESTATIONS */}
-      <section id="prestations" className="mx-auto max-w-6xl px-5 py-24">
+      <section id="prestations" className="relative overflow-hidden py-24">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(50%_70%_at_85%_-5%,rgba(201,162,39,0.15),transparent_55%),radial-gradient(45%_60%_at_5%_100%,rgba(201,162,39,0.10),transparent_55%)]" />
+          <div className="absolute inset-0 opacity-50 bg-[repeating-linear-gradient(115deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_7px)]" />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-5">
         <Reveal className="mb-12 text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-gold-2">Nos prestations</div>
           <h2 className="mt-2 font-display text-4xl uppercase sm:text-5xl">
@@ -126,6 +146,7 @@ export default function HomePage() {
               </div>
             </Reveal>
           ))}
+        </div>
         </div>
       </section>
 
@@ -157,8 +178,15 @@ export default function HomePage() {
       </section>
 
       {/* REALISATIONS / VITRAGE */}
-      <section id="realisations" className="mx-auto max-w-6xl px-5 py-24">
-        <Reveal className="mb-10 text-center">
+      <section id="realisations" className="relative overflow-hidden py-24">
+        {/* Fond d'ambiance — or & carbone */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(55%_75%_at_12%_0%,rgba(201,162,39,0.16),transparent_55%),radial-gradient(52%_72%_at_92%_100%,rgba(201,162,39,0.12),transparent_55%)]" />
+          <div className="absolute inset-0 opacity-60 bg-[repeating-linear-gradient(115deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_7px)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_50%,transparent_58%,rgba(8,8,10,0.55)_100%)]" />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-5">
+        <Reveal className="mb-10 text-center [text-shadow:0_2px_12px_rgba(0,0,0,0.7)]">
           <div className="text-xs uppercase tracking-[0.3em] text-gold-2">Réalisations</div>
           <h2 className="mt-2 font-display text-4xl uppercase sm:text-5xl">
             Vitrage — tout véhicule
@@ -173,7 +201,7 @@ export default function HomePage() {
             const Icon = v.icon;
             return (
               <Reveal key={v.t} delay={i * 60}>
-                <div className="flex h-full flex-col rounded-2xl border border-line-soft bg-night-panel p-7 transition-colors hover:border-line-gold">
+                <div className="flex h-full flex-col rounded-2xl border border-line-soft bg-[rgba(16,16,20,0.86)] p-7 backdrop-blur-sm transition-colors hover:border-line-gold">
                   <Icon className="text-gold-1" size={26} />
                   <h3 className="mt-4 font-display text-lg uppercase">{v.t}</h3>
                   <p className="mt-2 text-sm text-ink-muted">{v.d}</p>
@@ -188,7 +216,7 @@ export default function HomePage() {
 
         {/* dalle longue transversale */}
         <Reveal delay={120}>
-          <div className="mt-5 flex flex-col items-center justify-between gap-5 rounded-2xl border border-line-gold bg-gradient-to-r from-gold/10 to-transparent p-8 sm:flex-row">
+          <div className="mt-5 flex flex-col items-center justify-between gap-5 rounded-2xl border border-line-gold bg-gradient-to-r from-gold/[0.14] to-[rgba(16,16,20,0.72)] p-8 backdrop-blur-sm sm:flex-row">
             <div>
               <h3 className="font-display text-2xl uppercase">Remplacement &amp; réparation de vitrage</h3>
               <p className="mt-1 text-sm text-ink-muted">
@@ -203,6 +231,7 @@ export default function HomePage() {
             </a>
           </div>
         </Reveal>
+        </div>
       </section>
 
       {/* PROCESS */}
@@ -227,7 +256,12 @@ export default function HomePage() {
       </section>
 
       {/* TARIFS */}
-      <section id="tarifs" className="mx-auto max-w-6xl px-5 py-24">
+      <section id="tarifs" className="relative overflow-hidden py-24">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(55%_75%_at_50%_-8%,rgba(201,162,39,0.16),transparent_55%)]" />
+          <div className="absolute inset-0 opacity-50 bg-[repeating-linear-gradient(115deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_7px)]" />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-5">
         <Reveal className="mb-12 text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-gold-2">Tarifs</div>
           <h2 className="mt-2 font-display text-4xl uppercase sm:text-5xl">Nos formules</h2>
@@ -236,48 +270,82 @@ export default function HomePage() {
           </p>
         </Reveal>
         <div className="grid gap-6 lg:grid-cols-3">
-          {PACKAGES.map((p, i) => (
-            <Reveal key={p.name} delay={i * 70}>
-              <div
-                className={
-                  "relative h-full rounded-2xl border p-8 " +
-                  (p.highlight
-                    ? "border-line-gold bg-gradient-to-b from-gold/10 to-transparent shadow-premium"
-                    : "border-line-soft bg-night-panel")
-                }
-              >
-                {p.highlight && (
-                  <span className="absolute -top-3 left-8 rounded-full bg-gold-grad px-3 py-1 font-display text-[10px] uppercase tracking-widest text-[#1a1400]">
-                    Le plus choisi
-                  </span>
-                )}
-                <h3 className="font-display text-2xl uppercase">{p.name}</h3>
-                <p className="mt-1 text-sm text-ink-muted">{p.desc}</p>
-                <div className="mt-5 flex items-end gap-1">
-                  <span className="text-xs text-ink-faint">dès</span>
-                  <span className="font-display text-4xl text-gold-1">{p.price}&nbsp;€</span>
-                </div>
-                <ul className="mt-6 space-y-2.5">
-                  {p.feats.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-ink-muted">
-                      <Check size={16} className="text-gold-1" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href="/compte"
+          {formules.map((f, i) => {
+            const feats = f.serviceIds
+              .map((id) => serviceMap.get(id)?.name)
+              .filter((n): n is string => Boolean(n));
+            return (
+              <Reveal key={f.id} delay={i * 70}>
+                <div
                   className={
-                    "mt-7 block rounded-xl py-3 text-center font-display text-sm uppercase tracking-wide transition-colors " +
-                    (p.highlight
-                      ? "bg-gold-grad text-[#1a1400] shadow-gold"
-                      : "border border-line-gold text-gold-1 hover:bg-gold/[0.08]")
+                    "relative h-full rounded-2xl border p-8 " +
+                    (f.highlight
+                      ? "border-line-gold bg-gradient-to-b from-gold/10 to-transparent shadow-premium"
+                      : "border-line-soft bg-night-panel")
                   }
                 >
-                  Réserver
-                </a>
-              </div>
-            </Reveal>
-          ))}
+                  {f.highlight && (
+                    <span className="absolute -top-3 left-8 rounded-full bg-gold-grad px-3 py-1 font-display text-[10px] uppercase tracking-widest text-[#1a1400]">
+                      Le plus choisi
+                    </span>
+                  )}
+                  <h3 className="font-display text-2xl uppercase">{f.name}</h3>
+                  {f.description && <p className="mt-1 text-sm text-ink-muted">{f.description}</p>}
+                  <div className="mt-5 flex items-end gap-1">
+                    <span className="text-xs text-ink-faint">dès</span>
+                    <span className="font-display text-4xl text-gold-1">{formulePrice(f.serviceIds)}&nbsp;€</span>
+                  </div>
+                  <ul className="mt-6 space-y-2.5">
+                    {feats.map((name) => (
+                      <li key={name} className="flex items-center gap-2 text-sm text-ink-muted">
+                        <Check size={16} className="text-gold-1" /> {name}
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href="/compte"
+                    className={
+                      "mt-7 block rounded-xl py-3 text-center font-display text-sm uppercase tracking-wide transition-colors " +
+                      (f.highlight
+                        ? "bg-gold-grad text-[#1a1400] shadow-gold"
+                        : "border border-line-gold text-gold-1 hover:bg-gold/[0.08]")
+                    }
+                  >
+                    Réserver
+                  </a>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        {/* Prestations hors formule (ex. Traitement céramique) — dalles transversales */}
+        {horsFormule.length > 0 && (
+          <div className="mt-6 space-y-4">
+            {horsFormule.map((s, i) => (
+              <Reveal key={s.id} delay={i * 70}>
+                <div className="flex flex-col items-start justify-between gap-5 rounded-2xl border border-line-gold bg-gradient-to-r from-gold/10 to-transparent p-8 sm:flex-row sm:items-center">
+                  <div>
+                    <h3 className="font-display text-2xl uppercase">{s.name}</h3>
+                    {s.description && <p className="mt-1 max-w-xl text-sm text-ink-muted">{s.description}</p>}
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-end gap-1">
+                      <span className="text-xs text-ink-faint">dès</span>
+                      <span className="font-display text-4xl text-gold-1">{startingPrice(s)}&nbsp;€</span>
+                    </div>
+                    <a
+                      href="/compte"
+                      className="whitespace-nowrap rounded-xl bg-gold-grad px-6 py-3 font-display text-sm uppercase tracking-wide text-[#1a1400] shadow-gold"
+                    >
+                      Réserver
+                    </a>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        )}
         </div>
       </section>
 

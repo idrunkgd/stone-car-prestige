@@ -4,29 +4,38 @@ import { TopBar } from "@/components/layout/TopBar";
 import { QuoteBuilder } from "@/components/ventes/QuoteBuilder";
 import { getVehicles } from "@/lib/crm-store";
 import { getServices } from "@/lib/service-catalog-store";
-import { vehicles as demoVehicles, customerName } from "@/lib/demo-data";
+import { getAccounts } from "@/lib/auth-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewQuotePage() {
-  const services = await getServices();
-  const stored = await getVehicles();
-  const vehicles = [
-    ...stored.map((v) => ({
+  const [services, stored, accounts] = await Promise.all([
+    getServices(),
+    getVehicles(),
+    getAccounts(),
+  ]);
+
+  // Véhicules des comptes clients (enregistrés par les clients eux-mêmes)
+  const clientVehicles = accounts.flatMap((a) =>
+    (a.vehicles ?? []).map((v) => ({
       id: v.id,
       title: `${v.make} ${v.model}`,
       plate: v.plate,
       category: v.category,
-      owner: v.ownerName,
+      owner: a.name,
     })),
-    ...demoVehicles.map((v) => ({
-      id: v.id,
-      title: `${v.make} ${v.model}`,
-      plate: v.plate,
-      category: v.category,
-      owner: customerName(v.ownerId),
-    })),
-  ];
+  );
+
+  // Véhicules créés côté admin (CRM)
+  const adminVehicles = stored.map((v) => ({
+    id: v.id,
+    title: `${v.make} ${v.model}`,
+    plate: v.plate,
+    category: v.category,
+    owner: v.ownerName,
+  }));
+
+  const vehicles = [...clientVehicles, ...adminVehicles];
 
   return (
     <>

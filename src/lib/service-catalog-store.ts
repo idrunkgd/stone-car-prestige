@@ -13,7 +13,7 @@ export const SEED_SERVICES: ManagedService[] = [
   { id: "svc-moteur", name: "Nettoyage moteur", active: true, order: 5, tiers: { petite: { price: 50, duration: 30 }, moyenne: { price: 60, duration: 40 }, grande: { price: 70, duration: 45 } } },
   { id: "svc-jantes", name: "Traitement jantes", active: true, order: 6, tiers: { petite: { price: 20, duration: 20 }, moyenne: { price: 25, duration: 25 }, grande: { price: 30, duration: 30 } } },
   { id: "svc-polissage", name: "Polissage 1 étape", active: true, order: 7, tiers: { petite: { price: 180, duration: 150 }, moyenne: { price: 230, duration: 180 }, grande: { price: 290, duration: 210 } } },
-  { id: "svc-ceramique", name: "Protection céramique", active: true, order: 8, tiers: { petite: { price: 350, duration: 240 }, moyenne: { price: 450, duration: 300 }, grande: { price: 600, duration: 360 } } },
+  { id: "svc-ceramique", name: "Traitement céramique", active: true, order: 8, horsFormule: true, description: "Protection longue durée, effet hydrophobe et éclat préservé.", tiers: { petite: { price: 350, duration: 240 }, moyenne: { price: 450, duration: 300 }, grande: { price: 600, duration: 360 } } },
 ];
 
 /**

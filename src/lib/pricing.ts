@@ -31,6 +31,11 @@ export function sizeForCategory(cat: VehicleCategory): SizeTier {
 /** Taux de TVA par défaut (Belgique). */
 export const VAT_RATE = 21;
 
+/** Prix « dès » d'une prestation = tarif de la plus petite taille. */
+export function startingPrice(svc: { tiers: Record<SizeTier, { price: number }> }): number {
+  return svc.tiers?.petite?.price ?? 0;
+}
+
 /** Durée lisible à partir de minutes (ex : 95 → "1 h 35"). */
 export function humanMinutes(min: number): string {
   const h = Math.floor(min / 60);

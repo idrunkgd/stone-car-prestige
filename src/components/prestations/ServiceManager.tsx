@@ -23,6 +23,8 @@ function ServiceCard({ svc }: { svc: ManagedService }) {
   const [pending, start] = useTransition();
   const [name, setName] = useState(svc.name);
   const [tiers, setTiers] = useState(svc.tiers);
+  const [description, setDescription] = useState(svc.description ?? "");
+  const [hors, setHors] = useState(!!svc.horsFormule);
   const [saved, setSaved] = useState(false);
 
   function setTier(size: SizeTier, key: "price" | "duration", val: string) {
@@ -32,7 +34,12 @@ function ServiceCard({ svc }: { svc: ManagedService }) {
 
   function save() {
     start(async () => {
-      await updateServiceAction(svc.id, { name: name.trim() || svc.name, tiers });
+      await updateServiceAction(svc.id, {
+        name: name.trim() || svc.name,
+        tiers,
+        description: description.trim(),
+        horsFormule: hors,
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       router.refresh();
@@ -89,6 +96,17 @@ function ServiceCard({ svc }: { svc: ManagedService }) {
           </div>
         ))}
       </div>
+
+      <input
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Description (affichée sur le site, optionnel)"
+        className="mt-3 w-full rounded-lg border border-line-soft bg-night-2 px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-gold focus:outline-none"
+      />
+      <label className="mt-2 flex cursor-pointer items-center gap-2 rounded-lg border border-line-soft bg-night-2 px-3 py-2 text-sm">
+        <input type="checkbox" checked={hors} onChange={(e) => setHors(e.target.checked)} className="accent-gold-1" />
+        Hors formule <span className="text-[12px] text-ink-faint">— vendue seule, affichée à part sur le site</span>
+      </label>
 
       <button
         onClick={save}

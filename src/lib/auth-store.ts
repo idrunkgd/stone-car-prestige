@@ -19,6 +19,11 @@ export async function getAccountById(id: string): Promise<Account | null> {
   return getDoc<Account>(COL, id);
 }
 
+/** Tous les comptes clients (pour la partie admin). */
+export async function getAccounts(): Promise<Account[]> {
+  return listDocs<Account>(COL);
+}
+
 export async function createAccount(input: {
   email: string;
   name: string;

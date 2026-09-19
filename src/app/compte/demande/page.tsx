@@ -8,6 +8,7 @@ import { getCurrentAccount } from "@/lib/auth-store";
 import { getServices } from "@/lib/service-catalog-store";
 import { getRequests } from "@/lib/request-store";
 import { getSettings } from "@/lib/settings-store";
+import { getCardViewsForAccount } from "@/lib/subscription-store";
 import type { Booked } from "@/lib/availability";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,15 @@ export default async function DemandePage() {
 
   const services = await getServices();
   const settings = await getSettings();
+  const subscriptions = (await getCardViewsForAccount(account.id))
+    .filter((v) => v.usable)
+    .map((v) => ({
+      id: v.card.id,
+      planName: v.card.plan.name,
+      remaining: v.unlimited ? null : v.remaining,
+      expiresAt: v.card.expiresAt,
+      serviceIds: v.card.plan.serviceIds,
+    }));
   const booked: Booked[] = (await getRequests())
     .filter((r) => r.slotDate && r.slotStart && r.durationMin && r.status !== "refuse")
     .map((r) => ({ date: r.slotDate!, start: r.slotStart!, duration: r.durationMin! }));
@@ -41,6 +51,7 @@ export default async function DemandePage() {
           services={services}
           booked={booked}
           opening={settings.openingHours}
+          subscriptions={subscriptions}
         />
       </section>
       <SiteFooter />

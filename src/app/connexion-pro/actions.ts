@@ -2,16 +2,17 @@
 
 import { redirect } from "next/navigation";
 import {
-  verifyAdminCredentials,
+  roleForCredentials,
   setAdminSession,
   clearAdminSession,
 } from "@/lib/admin-auth";
 
 export async function loginAdminAction(input: { email: string; password: string }) {
-  if (!verifyAdminCredentials(input.email, input.password)) {
+  const role = roleForCredentials(input.email, input.password);
+  if (!role) {
     return { error: "Email ou mot de passe incorrect." };
   }
-  await setAdminSession();
+  await setAdminSession(role);
   redirect("/app");
 }
 

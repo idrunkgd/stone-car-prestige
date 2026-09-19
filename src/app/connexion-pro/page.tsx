@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin-auth";
+import { isStaff } from "@/lib/admin-auth";
 import { AdminLoginForm } from "./AdminLoginForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function ConnexionProPage() {
-  if (await isAdmin()) redirect("/app");
+  if (await isStaff()) redirect("/app");
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-night px-5">

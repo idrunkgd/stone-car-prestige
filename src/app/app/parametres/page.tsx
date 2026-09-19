@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/admin-auth";
 import { TopBar } from "@/components/layout/TopBar";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { getSettings } from "@/lib/settings-store";
@@ -5,6 +6,8 @@ import { getSettings } from "@/lib/settings-store";
 export const dynamic = "force-dynamic";
 
 export default async function ParametresPage() {
+  await requireAdminPage();
+
   const settings = await getSettings();
   return (
     <>

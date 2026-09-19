@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Check, Clock, Calendar, Car } from "lucide-react";
+import { Check, Clock, Calendar, Car, CreditCard } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { submitDemandeAction } from "@/app/compte/actions";
 import {
@@ -21,18 +21,32 @@ import {
 } from "@/lib/availability";
 import type { ClientVehicle } from "@/lib/auth-types";
 import type { ManagedService } from "@/lib/service-catalog-types";
+import { shortDate } from "@/lib/subscription-types";
 import { eur, cn } from "@/lib/utils";
+
+/** Carte d'abonnement utilisable, proposée au moment de la demande. */
+export type UsableSubscription = {
+  id: string;
+  planName: string;
+  /** `null` = illimité. */
+  remaining: number | null;
+  expiresAt: string;
+  /** Prestations couvertes — liste vide = toutes. */
+  serviceIds: string[];
+};
 
 export function DemandeBuilder({
   vehicles,
   services,
   booked,
   opening,
+  subscriptions = [],
 }: {
   vehicles: ClientVehicle[];
   services: ManagedService[];
   booked: Booked[];
   opening: OpeningHours;
+  subscriptions?: UsableSubscription[];
 }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState("");
@@ -41,6 +55,7 @@ export function DemandeBuilder({
   const [day, setDay] = useState("");
   const [slot, setSlot] = useState("");
   const [message, setMessage] = useState("");
+  const [useSubscription, setUseSubscription] = useState(true);
 
   const vehicle = vehicles.find((v) => v.id === vehicleId)!;
   const size = sizeForCategory(vehicle.category);
@@ -55,6 +70,22 @@ export function DemandeBuilder({
     [day, duration, booked, opening],
   );
   const tooLong = duration > 0 && !fitsInAnyDay(duration, opening);
+
+  /**
+   * Carte utilisable pour les prestations choisies. La proposition est
+   * purement indicative : le lavage n'est décompté qu'au moment où
+   * l'employé le valide, jamais à l'envoi de la demande.
+   */
+  const usableCard = useMemo(() => {
+    if (chosen.length === 0) return null;
+    const ids = chosen.map((s) => s.id);
+    return (
+      subscriptions.find(
+        (c) =>
+          c.serviceIds.length === 0 || ids.some((id) => c.serviceIds.includes(id)),
+      ) ?? null
+    );
+  }, [chosen, subscriptions]);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -87,6 +118,8 @@ export function DemandeBuilder({
         slotDate: day || undefined,
         slotStart: slot || undefined,
         message,
+        subscriptionCardId:
+          usableCard && useSubscription ? usableCard.id : undefined,
       });
       if (res?.error) setError(res.error);
     });
@@ -245,6 +278,46 @@ export function DemandeBuilder({
               </div>
             )}
           </div>
+
+          {usableCard && (
+            <div className="mt-4 rounded-xl border border-line-gold bg-gold/[0.08] px-3.5 py-3">
+              <div className="flex items-start gap-2 text-[13px]">
+                <CreditCard size={16} className="mt-0.5 shrink-0 text-gold-1" />
+                <div>
+                  <b className="font-display uppercase tracking-wide text-gold-1">
+                    {usableCard.planName}
+                  </b>
+                  <div className="text-ink-muted">
+                    Vous possédez un abonnement avec{" "}
+                    <b className="text-ink">
+                      {usableCard.remaining === null
+                        ? "un nombre illimité de"
+                        : usableCard.remaining}{" "}
+                      {usableCard.remaining === 1 ? "lavage" : "lavages"}
+                    </b>{" "}
+                    disponible{usableCard.remaining === 1 ? "" : "s"} · valable
+                    jusqu&apos;au {shortDate(usableCard.expiresAt)}.
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUseSubscription((v) => !v)}
+                className={cn(
+                  "mt-2.5 flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 font-display text-[12px] uppercase tracking-wider transition-colors",
+                  useSubscription
+                    ? "border-line-gold bg-gold/15 text-gold-1"
+                    : "border-line-soft text-ink-muted hover:border-line-gold",
+                )}
+              >
+                {useSubscription && <Check size={14} />} Utiliser mon abonnement
+              </button>
+              <p className="mt-2 text-[11px] text-ink-faint">
+                Le lavage sera décompté par l&apos;équipe au moment de la
+                prestation, jamais avant.
+              </p>
+            </div>
+          )}
 
           <p className="mt-3 rounded-lg border border-line-soft bg-night-2 px-3 py-2 text-[11px] text-ink-muted">
             Prix indicatif. Le tarif définitif est confirmé après avoir vu le véhicule.

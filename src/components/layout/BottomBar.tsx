@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV } from "@/lib/nav";
+import { navFor } from "@/lib/nav";
+import type { StaffRole } from "@/lib/subscription-types";
 import { cn } from "@/lib/utils";
 
 /** Barre inférieure tablette/mobile : fonctions vitales uniquement. */
-export function BottomBar() {
+export function BottomBar({ role = "admin" }: { role?: StaffRole }) {
   const pathname = usePathname();
-  const items = NAV.filter((i) => i.primary);
+  const items = navFor(role).filter((i) => i.primary);
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-line-soft bg-night-2/95 px-2 py-2 backdrop-blur md:hidden">

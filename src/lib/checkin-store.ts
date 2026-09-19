@@ -44,6 +44,7 @@ export async function createInterventionFromRequest(r: BookingRequest): Promise<
     status: "PLANIFIE",
     checkinDone: false,
     sourceRequestId: r.id,
+    subscriptionCardId: r.subscriptionCardId,
     slotDate: r.slotDate,
     slotStart: r.slotStart,
   });

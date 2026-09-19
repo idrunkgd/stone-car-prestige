@@ -7,6 +7,11 @@ import { AuthForms } from "@/components/compte/AuthForms";
 import { AddVehicleForm } from "@/components/compte/AddVehicleForm";
 import { getCurrentAccount } from "@/lib/auth-store";
 import { getRequests } from "@/lib/request-store";
+import { getCardViewsForAccount } from "@/lib/subscription-store";
+import { SubscriptionCardVisual } from "@/components/subscription/SubscriptionCardVisual";
+import { toCardDTO } from "@/lib/subscription-types";
+import { qrSvg } from "@/lib/qrcode";
+import { siteOrigin } from "@/lib/site-url";
 import { logoutAction } from "./actions";
 import { eur } from "@/lib/utils";
 import { humanMinutes } from "@/lib/pricing";
@@ -105,12 +110,61 @@ export default async function ComptePage({
               </Card>
             </div>
 
+            {/* Mes abonnements */}
+            <MySubscriptions accountId={account.id} />
+
             {/* Mes demandes */}
             <MyRequests accountId={account.id} />
           </>
         )}
       </section>
       <SiteFooter />
+    </div>
+  );
+}
+
+/** Aperçu des cartes d'abonnement du client (détail sur /compte/abonnements). */
+async function MySubscriptions({ accountId }: { accountId: string }) {
+  const [views, origin] = await Promise.all([
+    getCardViewsForAccount(accountId),
+    siteOrigin(),
+  ]);
+  const live = views.filter(
+    (v) => v.status === "active" || v.status === "suspendue",
+  );
+  if (views.length === 0) return null;
+
+  const main = live[0] ?? views[0];
+
+  return (
+    <div className="mt-8">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-display text-sm uppercase tracking-[0.15em] text-gold-1">
+          Mes abonnements
+        </h2>
+        <Link
+          href="/compte/abonnements"
+          className="flex items-center gap-1 text-[12px] text-ink-muted hover:text-gold-1"
+        >
+          Tout voir <ArrowRight size={13} />
+        </Link>
+      </div>
+      <SubscriptionCardVisual
+        card={toCardDTO(main)}
+        qrSvg={qrSvg(`${origin}/app/carte/${main.card.qrToken}`, {
+          size: 104,
+          title: `Carte ${main.card.number}`,
+        })}
+      />
+      {views.length > 1 && (
+        <Link
+          href="/compte/abonnements"
+          className="mt-2 block text-center text-[12px] text-ink-faint hover:text-gold-1"
+        >
+          + {views.length - 1} autre{views.length > 2 ? "s" : ""} carte
+          {views.length > 2 ? "s" : ""}
+        </Link>
+      )}
     </div>
   );
 }

@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:abonnements": "tsc -p tests/tsconfig.json && node tests/subscriptions.test.cjs",
+    "seed:abonnements": "tsc -p tests/tsconfig.json && node tests/seed.cjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

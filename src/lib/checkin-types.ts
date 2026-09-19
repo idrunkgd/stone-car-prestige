@@ -44,6 +44,8 @@ export type CheckinRecord = {
   // ── Lien avec la demande d'origine + suivi du check-in ──
   sourceRequestId?: string;
   checkinDone?: boolean;
+  /** Carte d'abonnement rattachée (proposée par le client à la réservation). */
+  subscriptionCardId?: string;
   slotDate?: string;
   slotStart?: string;
 };

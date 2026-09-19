@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/admin-auth";
 import { TopBar } from "@/components/layout/TopBar";
 import { Card } from "@/components/ui/Card";
 import { PhotoCompare } from "@/components/galerie/PhotoCompare";
@@ -8,6 +9,8 @@ import { getRealisations } from "@/lib/realisation-store";
 export const dynamic = "force-dynamic";
 
 export default async function GaleriePage() {
+  await requireAdminPage();
+
   const [realisations, checkins] = await Promise.all([
     getRealisations(),
     getCheckins(),

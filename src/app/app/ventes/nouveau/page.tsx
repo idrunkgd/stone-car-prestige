@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/admin-auth";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { TopBar } from "@/components/layout/TopBar";
@@ -9,6 +10,8 @@ import { getAccounts } from "@/lib/auth-store";
 export const dynamic = "force-dynamic";
 
 export default async function NewQuotePage() {
+  await requireAdminPage();
+
   const [services, stored, accounts] = await Promise.all([
     getServices(),
     getVehicles(),

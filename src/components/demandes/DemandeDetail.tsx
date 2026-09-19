@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Phone, Mail, Car, Home, CalendarClock, Check, ArrowRight, StickyNote, FileText } from "lucide-react";
+import { Phone, Mail, Car, Home, CalendarClock, Check, ArrowRight, StickyNote, FileText, CreditCard } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import {
   setNoteAction,
@@ -23,14 +23,29 @@ import {
 import type { BookingRequest } from "@/lib/request-types";
 import { eur, cn } from "@/lib/utils";
 
+/** Carte d'abonnement du client, affichée dans la fiche demande. */
+export type DemandeSubscription = {
+  cardId: string;
+  planName: string;
+  remaining: number | null;
+  total: number;
+  statusLabel: string;
+  usable: boolean;
+  blockedReason?: string;
+  /** Le client a explicitement demandé à utiliser cette carte. */
+  chosenByClient: boolean;
+};
+
 export function DemandeDetail({
   request,
   booked,
   opening,
+  subscription = null,
 }: {
   request: BookingRequest;
   booked: Booked[];
   opening: OpeningHours;
+  subscription?: DemandeSubscription | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -103,6 +118,49 @@ export function DemandeDetail({
             <p className="mt-2 text-sm text-ink-muted">{request.service}</p>
           )}
         </Card>
+
+        {/* Abonnement */}
+        {subscription && (
+          <Card gold={subscription.chosenByClient}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2">
+                <CreditCard size={17} className="mt-0.5 shrink-0 text-gold-1" />
+                <div>
+                  <b className="font-display uppercase text-gold-1">
+                    Abonnement {subscription.planName}
+                  </b>
+                  <div className="text-[13px] text-ink-muted">
+                    {subscription.remaining === null
+                      ? "Lavages illimités"
+                      : `${subscription.remaining} / ${subscription.total} lavages restants`}{" "}
+                    · {subscription.statusLabel}
+                  </div>
+                  {subscription.chosenByClient ? (
+                    <div className="mt-1 text-[12px] text-state-green">
+                      Le client souhaite utiliser cet abonnement pour cette
+                      prestation.
+                    </div>
+                  ) : (
+                    <div className="mt-1 text-[12px] text-ink-faint">
+                      Carte disponible sur ce client.
+                    </div>
+                  )}
+                  {!subscription.usable && subscription.blockedReason && (
+                    <div className="mt-1 text-[12px] text-state-orange">
+                      {subscription.blockedReason}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Link
+                href={`/app/abonnements/${subscription.cardId}`}
+                className="shrink-0 whitespace-nowrap rounded-lg border border-line-gold px-3 py-1.5 font-display text-[11px] uppercase tracking-wider text-gold-1 hover:bg-gold/[0.08]"
+              >
+                Ouvrir la carte
+              </Link>
+            </div>
+          </Card>
+        )}
 
         {/* Remarque interne */}
         <Card>

@@ -14,6 +14,7 @@ import {
 import { addRequest, getRequest, updateRequest } from "@/lib/request-store";
 import { getQuote, updateQuote } from "@/lib/quote-store";
 import { createInterventionFromRequest } from "@/lib/checkin-store";
+import { getCardViewsForAccount } from "@/lib/subscription-store";
 import type { VehicleCategory } from "@/lib/demo-data";
 import type { SizeTier } from "@/lib/pricing";
 
@@ -76,9 +77,21 @@ export async function submitDemandeAction(input: {
   slotDate?: string;
   slotStart?: string;
   message?: string;
+  /** Carte que le client souhaite utiliser (vérifiée côté serveur). */
+  subscriptionCardId?: string;
 }) {
   const acc = await getCurrentAccount();
   if (!acc) return { error: "Non connecté." };
+
+  // La carte n'est retenue que si elle appartient bien au client et qu'elle
+  // est utilisable. Aucun lavage n'est décompté ici : la consommation est
+  // toujours validée par un employé au moment de la prestation.
+  let subscriptionCardId: string | undefined;
+  if (input.subscriptionCardId) {
+    const mine = await getCardViewsForAccount(acc.id);
+    const chosen = mine.find((v) => v.card.id === input.subscriptionCardId);
+    if (chosen?.usable) subscriptionCardId = chosen.card.id;
+  }
 
   await addRequest({
     id: crypto.randomUUID(),
@@ -100,6 +113,7 @@ export async function submitDemandeAction(input: {
     slotStart: input.slotStart,
     atHome: false,
     message: input.message?.trim() || undefined,
+    subscriptionCardId,
   });
 
   revalidatePath("/app/demandes");

@@ -102,3 +102,90 @@ Voir le **dossier de conception** (roadmap MVP / V1.5 / V2 / V3) pour la suite.
 
 Next.js · React 19 · TypeScript · Tailwind CSS · Framer Motion · Prisma · PostgreSQL ·
 lucide-react. Hébergement cible : Vercel + Neon/Supabase + stockage objet S3-compatible.
+
+---
+
+## 💳 Abonnements / cartes de lavages prépayées
+
+Cartes virtuelles à tampons numériques : l'administrateur définit des formules
+(Essential, Premium, Prestige…), attribue une carte à un client, et le client
+retrouve sa carte dans son espace personnel.
+
+### Écrans
+
+| Rôle | Écran | Chemin |
+| --- | --- | --- |
+| Admin | Tableau de bord, recherche, statistiques | `/app/abonnements` |
+| Admin | Formules d'abonnement (création, tarifs, apparence) | `/app/abonnements/plans` |
+| Admin | Attribution d'une carte à un client | `/app/abonnements/nouveau` |
+| Admin + Employé | Fiche carte, bouton **Utiliser 1 lavage**, historique | `/app/abonnements/[id]` |
+| Admin + Employé | Scanner une carte (caméra ou recherche manuelle) | `/app/abonnements/scan` |
+| Admin + Employé | Résolution d'un QR code (jeton → fiche) | `/app/carte/[token]` |
+| Client | Mes abonnements (carte virtuelle, QR, historique) | `/compte/abonnements` |
+
+### Modèle de données
+
+Quatre collections dans la table `documents` :
+
+- `subscription_plans` — définition commerciale (nom, prix, nombre de lavages,
+  prestations concernées, validité, apparence, conditions) ;
+- `subscription_cards` — carte attribuée, avec un **instantané** des conditions
+  commerciales : modifier une formule ne réécrit pas les cartes déjà vendues ;
+- `subscription_usages` — registre des consommations ;
+- `subscription_adjustments` — registre des corrections administratives.
+
+**Le solde n'est jamais stocké dans un compteur.** Il est recalculé :
+
+```
+solde = crédits initiaux + Σ(ajustements) − consommations non annulées
+```
+
+Rien n'est jamais supprimé des registres : annuler un tampon marque la
+consommation comme annulée et écrit une opération d'annulation (date,
+administrateur, raison, consommation concernée).
+
+### Règles métier garanties côté serveur
+
+- contrôle du solde, de la date d'expiration et du statut à chaque utilisation ;
+- **transaction + verrou consultatif PostgreSQL** sur la carte : deux validations
+  simultanées ne peuvent pas décompter deux lavages ;
+- **clé d'idempotence** : double-clic, rafraîchissement ou retour arrière ne
+  décomptent qu'un seul lavage ;
+- un client ne peut jamais ajouter ni retirer un tampon : toutes les écritures
+  passent par des Server Actions protégées par rôle.
+
+### Statuts
+
+`brouillon` · `active` · `épuisée` · `expirée` · `suspendue` · `annulée`.
+Les deux statuts *épuisée* et *expirée* sont déduits automatiquement du solde et
+de la date ; les autres sont décidés par l'administrateur.
+
+### QR code
+
+Le QR encode `https://…/app/carte/<jeton>` — un jeton aléatoire, **jamais
+l'identifiant de la carte**. La page se trouve derrière l'authentification du
+personnel : scanner ouvre la fiche, la consommation reste toujours validée par
+un employé. Le jeton est régénérable depuis la fiche.
+
+Le générateur de QR code est intégré au projet (`src/lib/qrcode.ts`, rendu SVG,
+aucune dépendance ajoutée).
+
+### Tests
+
+```bash
+DATABASE_URL=postgres://… npm run test:abonnements
+```
+
+63 scénarios critiques sur une vraie base PostgreSQL : double-clic, concurrence
+(12 appels simultanés sur 3 lavages restants), carte épuisée / expirée /
+suspendue / annulée, annulation d'un tampon, corrections de crédits, recalcul
+auditable du solde, prestations couvertes, QR code, recherche, statistiques.
+
+`npm run seed:abonnements` crée un jeu de démonstration.
+
+### Variables d'environnement
+
+Voir `.env.example` : `NEXT_PUBLIC_SITE_URL` (contenu des QR codes),
+`STAFF_EMAIL` / `STAFF_PASSWORD` (compte employé), `RESEND_API_KEY` /
+`MAIL_FROM` (emails de notification), `CRON_SECRET` (relances automatiques via
+`GET /api/abonnements/relances`).

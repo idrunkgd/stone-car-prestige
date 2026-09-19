@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/admin-auth";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import { TopBar } from "@/components/layout/TopBar";
@@ -19,6 +20,8 @@ function fmt(iso: string) {
 }
 
 export default async function VentesPage() {
+  await requireAdminPage();
+
   const [quotes, invoices] = await Promise.all([getQuotes(), getInvoices()]);
 
   if (quotes.length === 0 && invoices.length === 0) {

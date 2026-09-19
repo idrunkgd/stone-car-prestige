@@ -37,4 +37,7 @@ export type BookingRequest = {
   devisId?: string;
   /** Intervention créée quand le client accepte + paie l'acompte. */
   interventionId?: string;
+
+  /** Carte d'abonnement que le client souhaite utiliser pour cette prestation. */
+  subscriptionCardId?: string;
 };

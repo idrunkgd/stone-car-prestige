@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/admin-auth";
 import { TopBar } from "@/components/layout/TopBar";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { StatTile } from "@/components/ui/StatTile";
@@ -5,17 +6,23 @@ import { getInvoices } from "@/lib/invoice-store";
 import { getQuotes } from "@/lib/quote-store";
 import { getCheckins } from "@/lib/checkin-store";
 import { getRequests } from "@/lib/request-store";
+import { getSubscriptionStats } from "@/lib/subscription-store";
+import { shortDate } from "@/lib/subscription-types";
+import Link from "next/link";
 import { SIZE_LABEL, type SizeTier } from "@/lib/pricing";
 import { eur } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function StatsPage() {
-  const [invoices, quotes, checkins, requests] = await Promise.all([
+  await requireAdminPage();
+
+  const [invoices, quotes, checkins, requests, subs] = await Promise.all([
     getInvoices(),
     getQuotes(),
     getCheckins(),
     getRequests(),
+    getSubscriptionStats(),
   ]);
 
   const paid = invoices.filter((i) => i.status === "payee");
@@ -64,6 +71,94 @@ export default async function StatsPage() {
         <StatTile value={quotes.length} label="Devis" />
         <StatTile value={requests.length} label="Demandes" />
         <StatTile value={newRequests} label="Nouvelles" green />
+      </div>
+
+      {/* Abonnements */}
+      <div className="mb-8">
+        <SectionHeader title="Abonnements" />
+        <div className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatTile value={subs.activeCards} label="Cartes actives" gold />
+          <StatTile
+            value={Math.round(subs.revenue)}
+            suffix=" €"
+            label="CA abonnements"
+            gold
+          />
+          <StatTile value={subs.creditsOutstanding} label="Lavages à prester" />
+          <StatTile value={subs.usedThisMonth} label="Consommés ce mois" green />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <b className="font-display text-sm uppercase tracking-wide text-gold-1">
+              Abonnements les plus vendus
+            </b>
+            {subs.topPlans.length === 0 ? (
+              <p className="mt-2 text-sm text-ink-muted">
+                Aucune carte vendue pour l&apos;instant.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-3">
+                {subs.topPlans.map((p) => {
+                  const max = Math.max(1, ...subs.topPlans.map((x) => x.cards));
+                  return (
+                    <div key={p.name}>
+                      <div className="mb-1 flex items-center justify-between text-sm">
+                        <span>{p.name}</span>
+                        <span className="font-display text-gold-1">
+                          {p.cards}{" "}
+                          <span className="text-[11px] text-ink-faint">
+                            {eur(p.revenue)}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-night-panel2">
+                        <div
+                          className="h-full rounded-full bg-gold-grad"
+                          style={{ width: `${(p.cards / max) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+          <Card>
+            <b className="font-display text-sm uppercase tracking-wide text-gold-1">
+              Cartes à relancer
+            </b>
+            <div className="mt-3 space-y-2">
+              {subs.expiringSoon.length === 0 && subs.exhausted.length === 0 ? (
+                <p className="text-sm text-ink-muted">Rien à signaler.</p>
+              ) : (
+                <>
+                  {subs.expiringSoon.slice(0, 4).map((v) => (
+                    <Link
+                      key={v.card.id}
+                      href={`/app/abonnements/${v.card.id}`}
+                      className="flex items-center justify-between rounded-lg border border-line-soft px-3 py-2 text-sm hover:border-line-gold"
+                    >
+                      <span>{v.card.holder.name}</span>
+                      <span className="text-[12px] text-state-orange">
+                        expire le {shortDate(v.card.expiresAt)}
+                      </span>
+                    </Link>
+                  ))}
+                  {subs.exhausted.slice(0, 4).map((v) => (
+                    <Link
+                      key={v.card.id}
+                      href={`/app/abonnements/${v.card.id}`}
+                      className="flex items-center justify-between rounded-lg border border-line-soft px-3 py-2 text-sm hover:border-line-gold"
+                    >
+                      <span>{v.card.holder.name}</span>
+                      <span className="text-[12px] text-ink-muted">épuisée</span>
+                    </Link>
+                  ))}
+                </>
+              )}
+            </div>
+          </Card>
+        </div>
       </div>
 
       {empty ? (

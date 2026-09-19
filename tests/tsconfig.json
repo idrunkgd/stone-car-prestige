@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "./out",
+    "rootDir": "../src/lib",
+    "strict": false,
+    "lib": [
+      "es2022",
+      "dom"
+    ]
+  },
+  "files": [
+    "../src/lib/subscription-store.ts",
+    "../src/lib/subscription-types.ts",
+    "../src/lib/notification-store.ts",
+    "../src/lib/db.ts",
+    "../src/lib/qrcode.ts"
+  ]
+}

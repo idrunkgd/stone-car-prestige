@@ -15,3 +15,8 @@ _extract*
 _tmp
 garage.png
 Parebrise.png
+
+tests/out
+.test-build
+
+tsconfig.tsbuildinfo

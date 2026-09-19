@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Globe } from "lucide-react";
-import { NAV } from "@/lib/nav";
+import { navFor } from "@/lib/nav";
+import type { StaffRole } from "@/lib/subscription-types";
 import { Logo } from "./Logo";
 import { logoutAdminAction } from "@/app/connexion-pro/actions";
 import { cn } from "@/lib/utils";
 
 /** Barre latérale rétractable (masquée sur mobile → BottomBar). */
-export function Sidebar() {
+export function Sidebar({ role = "admin" }: { role?: StaffRole }) {
   const pathname = usePathname();
+  const items = navFor(role);
 
   return (
     <aside className="sticky top-0 hidden h-screen w-[76px] flex-col items-center gap-1.5 border-r border-line-soft bg-gradient-to-b from-night-2 to-night py-4 md:flex">
@@ -25,7 +27,7 @@ export function Sidebar() {
         <Globe size={20} strokeWidth={1.8} />
         <span className="text-[8.5px] uppercase tracking-tight">Site</span>
       </a>
-      {NAV.map((item) => {
+      {items.map((item) => {
         const active =
           item.href === "/app"
             ? pathname === "/app"

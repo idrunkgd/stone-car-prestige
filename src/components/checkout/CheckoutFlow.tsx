@@ -2,15 +2,27 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, Check, BadgeCheck, Truck } from "lucide-react";
+import { Camera, Check, BadgeCheck, Truck, CreditCard, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { updateCheckinAction } from "@/app/app/checkin/actions";
+import { useWashAction } from "@/app/app/abonnements/actions";
 import { DEFAULT_QUALITY } from "@/lib/workorder";
 import type { CheckinRecord, Task } from "@/lib/checkin-types";
 import { eur, cn } from "@/lib/utils";
 
 const METHODS = ["Espèces", "Carte", "Virement"];
+
+/** Abonnement rattaché à l'intervention. */
+export type CheckoutSubscription = {
+  cardId: string;
+  planName: string;
+  holderName: string;
+  /** `null` = illimité. */
+  remaining: number | null;
+  usable: boolean;
+  blockedReason?: string;
+};
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -21,7 +33,13 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-export function CheckoutFlow({ record }: { record: CheckinRecord }) {
+export function CheckoutFlow({
+  record,
+  subscription = null,
+}: {
+  record: CheckinRecord;
+  subscription?: CheckoutSubscription | null;
+}) {
   const [quality, setQuality] = useState<Task[]>(
     record.quality ?? DEFAULT_QUALITY.map((label) => ({ label, done: false })),
   );
@@ -30,6 +48,9 @@ export function CheckoutFlow({ record }: { record: CheckinRecord }) {
   const [paid, setPaid] = useState<boolean>(!!record.payment);
   const [status, setStatus] = useState(record.status ?? "TERMINE");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [subPending, setSubPending] = useState(false);
+  const [subError, setSubError] = useState<string | null>(null);
+  const [subConfirm, setSubConfirm] = useState(false);
 
   const extraTotal = (record.extraWork ?? []).reduce((s, e) => s + e.price, 0);
   const finalTotal = record.total + extraTotal;
@@ -67,6 +88,43 @@ export function CheckoutFlow({ record }: { record: CheckinRecord }) {
     setStatus("PRET");
     save({
       payment: { method, amount: amt, paidAt: new Date().toISOString() },
+      status: "PRET",
+    });
+  }
+
+  /**
+   * Règle un check-out avec l'abonnement du client.
+   *
+   * La clé d'idempotence est déterministe (liée à l'intervention) : un
+   * double-clic, un rafraîchissement ou un retour arrière ne décomptent
+   * jamais deux lavages — le serveur reconnaît l'opération déjà traitée.
+   */
+  async function payWithSubscription() {
+    if (!subscription || subPending) return;
+    setSubPending(true);
+    setSubError(null);
+    const r = await useWashAction({
+      cardId: subscription.cardId,
+      idempotencyKey: `intervention:${record.id}`,
+      interventionId: record.id,
+      serviceLabel: record.service,
+      source: "checkout",
+    });
+    setSubPending(false);
+    setSubConfirm(false);
+    if ("error" in r && r.error) {
+      setSubError(r.error);
+      return;
+    }
+    setMethod("Abonnement");
+    setPaid(true);
+    setStatus("PRET");
+    await save({
+      payment: {
+        method: "Abonnement",
+        amount: 0,
+        paidAt: new Date().toISOString(),
+      },
       status: "PRET",
     });
   }
@@ -197,9 +255,90 @@ export function CheckoutFlow({ record }: { record: CheckinRecord }) {
               </li>
             </ul>
 
+            {subscription && !paid && (
+              <div className="mt-4 rounded-xl border border-line-gold bg-gold/[0.08] p-3.5">
+                <div className="flex items-start gap-2">
+                  <CreditCard size={17} className="mt-0.5 shrink-0 text-gold-1" />
+                  <div className="min-w-0 flex-1 text-[13px]">
+                    <b className="font-display uppercase tracking-wide text-gold-1">
+                      Abonnement {subscription.planName}
+                    </b>
+                    <div className="text-ink-muted">
+                      {subscription.holderName} ·{" "}
+                      {subscription.remaining === null
+                        ? "lavages illimités"
+                        : `${subscription.remaining} lavage${subscription.remaining > 1 ? "s" : ""} disponible${subscription.remaining > 1 ? "s" : ""}`}
+                    </div>
+                  </div>
+                </div>
+
+                {!subscription.usable ? (
+                  <div className="mt-2.5 flex items-center gap-2 text-[12.5px] text-state-orange">
+                    <ShieldAlert size={14} /> {subscription.blockedReason}
+                  </div>
+                ) : subConfirm ? (
+                  <div className="mt-3">
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="rounded-lg border border-line-soft bg-night-2 px-2 py-2">
+                        <div className="text-[10px] uppercase tracking-wider text-ink-faint">
+                          Solde avant
+                        </div>
+                        <div className="font-display text-lg">
+                          {subscription.remaining ?? "∞"}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-line-gold bg-gold/10 px-2 py-2">
+                        <div className="text-[10px] uppercase tracking-wider text-gold-2">
+                          Solde après
+                        </div>
+                        <div className="font-display text-lg text-gold-1">
+                          {subscription.remaining === null
+                            ? "∞"
+                            : Math.max(0, subscription.remaining - 1)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2.5 flex gap-2">
+                      <button
+                        onClick={() => setSubConfirm(false)}
+                        disabled={subPending}
+                        className="flex-1 rounded-lg border border-line-soft py-2.5 font-display text-[11px] uppercase tracking-wider text-ink-muted"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        onClick={payWithSubscription}
+                        disabled={subPending}
+                        className={cn(
+                          "flex-[1.4] rounded-lg bg-gold-grad py-2.5 font-display text-[11px] uppercase tracking-wider text-[#1a1400]",
+                          subPending && "opacity-60",
+                        )}
+                      >
+                        {subPending ? "Validation…" : "Confirmer le décompte"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setSubConfirm(true)}
+                    className="mt-3 w-full rounded-lg bg-gold-grad py-2.5 font-display text-[12px] uppercase tracking-wider text-[#1a1400] shadow-gold"
+                  >
+                    Régler avec l&apos;abonnement
+                  </button>
+                )}
+
+                {subError && (
+                  <p className="mt-2 text-[12px] text-[#e88]">{subError}</p>
+                )}
+              </div>
+            )}
+
             {paid ? (
               <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-line-gold bg-state-green/10 py-3 text-state-green">
-                <Check size={18} /> Payé {eur(finalTotal)} · {method}
+                <Check size={18} />{" "}
+                {method === "Abonnement"
+                  ? "Réglé par abonnement · 1 lavage décompté"
+                  : `Payé ${eur(finalTotal)} · ${method}`}
               </div>
             ) : (
               <>

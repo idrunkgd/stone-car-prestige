@@ -14,13 +14,17 @@
  *   # 1. Inventaire — lecture seule, n'écrit rien
  *   DATABASE_URL=… node scripts/nettoyage-clients.cjs
  *
- *   # 2. Suppression — écrit d'abord une sauvegarde JSON à côté du script
+ *   # 2. Suppression — écrit d'abord une sauvegarde JSON dans /tmp
  *   DATABASE_URL=… node scripts/nettoyage-clients.cjs --supprimer --je-confirme
  *
- * Le mot recherché peut être changé : --garder="autre nom".
+ * Options :
+ *   --garder="autre nom"          entité à conserver (défaut : dasolabs)
+ *   --sauvegarde=/chemin.json     emplacement de la sauvegarde JSON
+ *   --sans-sauvegarde             sauter la sauvegarde (snapshot déjà pris)
  */
 
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { Pool } = require("pg");
 
@@ -35,6 +39,7 @@ const valueOf = (name, def) => {
 
 const GARDER = valueOf("garder", "dasolabs");
 const SUPPRIMER = has("--supprimer") && has("--je-confirme");
+const SANS_SAUVEGARDE = has("--sans-sauvegarde");
 const DEMANDE_SUPPRESSION = has("--supprimer");
 
 /** Collections contenant des données client (candidates à la suppression). */
@@ -66,7 +71,7 @@ const COLLECTIONS_CONFIG = [
 const norm = (s) =>
   String(s ?? "")
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 
@@ -284,20 +289,49 @@ async function main() {
   }
 
   // Sauvegarde intégrale avant toute écriture.
-  const horodatage = new Date().toISOString().replace(/[:.]/g, "-");
-  const fichier = path.join(
-    __dirname,
-    `sauvegarde-avant-nettoyage-${horodatage}.json`,
-  );
-  fs.writeFileSync(
-    fichier,
-    JSON.stringify(
-      { date: new Date().toISOString(), garder: GARDER, documents: rows },
-      null,
-      2,
-    ),
-  );
-  console.log(`\nSauvegarde complète de la base écrite : ${fichier}`);
+  //
+  // Par défaut dans le répertoire temporaire : en production le dossier du
+  // script appartient à root alors que le conteneur tourne sous un utilisateur
+  // non privilégié, et n'y est donc pas inscriptible.
+  if (!SANS_SAUVEGARDE) {
+    const horodatage = new Date().toISOString().replace(/[:.]/g, "-");
+    const fichier =
+      valueOf("sauvegarde", null) ??
+      path.join(os.tmpdir(), `scp-sauvegarde-${horodatage}.json`);
+
+    try {
+      fs.writeFileSync(
+        fichier,
+        JSON.stringify(
+          { date: new Date().toISOString(), garder: GARDER, documents: rows },
+          null,
+          2,
+        ),
+      );
+      console.log(`\nSauvegarde complète de la base écrite : ${fichier}`);
+      console.log(
+        "  Attention : ce fichier vit dans le conteneur et disparaîtra au\n" +
+          "  prochain déploiement. Récupère-le si tu veux le garder.",
+      );
+    } catch (e) {
+      console.error(
+        `\nImpossible d'écrire la sauvegarde (${e.code ?? e.message}) :\n` +
+          `  ${fichier}\n\n` +
+          `Aucune suppression n'a été effectuée. Deux options :\n` +
+          `  • choisir un emplacement inscriptible :\n` +
+          `      --sauvegarde=/tmp/sauvegarde.json\n` +
+          `  • s'en passer, si tu as déjà un snapshot de la base côté Coolify :\n` +
+          `      --sans-sauvegarde\n`,
+      );
+      await pool.end();
+      process.exit(1);
+    }
+  } else {
+    console.log(
+      "\nSauvegarde JSON désactivée (--sans-sauvegarde).\n" +
+        "  Assure-toi d'avoir un snapshot de la base avant de continuer.",
+    );
+  }
 
   const client = await pool.connect();
   try {

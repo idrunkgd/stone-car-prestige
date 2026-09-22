@@ -18,6 +18,9 @@
  *   DATABASE_URL=… node scripts/nettoyage-clients.cjs --supprimer --je-confirme
  *
  * Options :
+ *   --tout                        table rase : supprime TOUTES les données
+ *                                 client, y compris DASOLABS. La configuration
+ *                                 (prestations, formules, paramètres) reste.
  *   --garder="autre nom"          entité à conserver (défaut : dasolabs)
  *   --sauvegarde=/chemin.json     emplacement de la sauvegarde JSON
  *   --sans-sauvegarde             sauter la sauvegarde (snapshot déjà pris)
@@ -40,6 +43,8 @@ const valueOf = (name, def) => {
 const GARDER = valueOf("garder", "dasolabs");
 const SUPPRIMER = has("--supprimer") && has("--je-confirme");
 const SANS_SAUVEGARDE = has("--sans-sauvegarde");
+/** Table rase : supprime TOUTES les données client, sans exception. */
+const TOUT = has("--tout");
 const DEMANDE_SUPPRESSION = has("--supprimer");
 
 /** Collections contenant des données client (candidates à la suppression). */
@@ -166,6 +171,14 @@ async function main() {
     return false;
   };
 
+  if (TOUT) {
+    console.log(
+      "\nMODE TABLE RASE — aucune donnée client ne sera conservée.\n" +
+        "  Comptes, fiches, véhicules, demandes, devis, factures, interventions,\n" +
+        "  cartes d'abonnement et registres, notifications : tout part.\n" +
+        "  Le catalogue de prestations, les formules et les paramètres restent.",
+    );
+  } else {
   console.log(`\nEntité conservée : « ${GARDER} »`);
   console.log(
     `  ${comptesGardes.length} compte(s) espace client, ${fichesGardees.length} fiche(s) back-office`,
@@ -181,10 +194,12 @@ async function main() {
     console.error(
       `\nAUCUN client ne correspond à « ${GARDER} ».\n` +
         `Tout serait supprimé — le script s'arrête par sécurité.\n` +
-        `Vérifie l'orthographe, ou passe --garder="le bon nom".`,
+        `Vérifie l'orthographe, ou passe --garder="le bon nom".\n` +
+        `Pour réellement tout effacer, c'est --tout (mode explicite).`,
     );
     await pool.end();
     process.exit(1);
+  }
   }
 
   /* ── 2. Décider, collection par collection ── */
@@ -203,7 +218,8 @@ async function main() {
     let sup = 0;
     for (const r of docs) {
       let garder;
-      if (col === "accounts") garder = idsComptes.has(r.id);
+      if (TOUT) garder = false;
+      else if (col === "accounts") garder = idsComptes.has(r.id);
       else if (col === "customers") garder = idsFiches.has(r.id);
       else garder = rattache(r.data);
       if (!garder) {
@@ -225,7 +241,7 @@ async function main() {
     if (docs.length === 0) continue;
     let sup = 0;
     for (const r of docs) {
-      if (!cartesConservees.has(r.data.cardId)) {
+      if (TOUT || !cartesConservees.has(r.data.cardId)) {
         aSupprimer.push(r);
         sup++;
       }

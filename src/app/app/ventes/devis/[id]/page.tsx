@@ -8,7 +8,7 @@ import { getSettings } from "@/lib/settings-store";
 import { SIZE_LABEL } from "@/lib/pricing";
 import { PrintButton } from "@/components/checkin/PrintButton";
 import { createInvoiceFromQuoteAction } from "@/app/app/ventes/actions";
-import { eur } from "@/lib/utils";
+import { eur, cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +32,12 @@ export default async function DevisPage({
   if (!q) notFound();
   const biz = await getSettings();
 
+  /* Une facture doit tenir sur une page : au-delà d'une douzaine de lignes,
+     la typographie et les interlignes se resserrent à l'impression. */
+  const lignes = q.items.length;
+  const dense = lignes > 12;
+  const tresDense = lignes > 22;
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between print:hidden">
@@ -52,8 +58,15 @@ export default async function DevisPage({
         </div>
       </div>
 
-      <div className="sheet mx-auto max-w-3xl rounded-xl bg-white p-8 text-neutral-900 shadow-premium print:rounded-none print:shadow-none">
-        <div className="flex items-start justify-between border-b-2 border-[#C9A227] pb-4">
+      <div className={cn(
+          "sheet sheet--document mx-auto max-w-3xl rounded-xl bg-white p-8 text-neutral-900 shadow-premium print:p-0 print:leading-snug print:rounded-none print:shadow-none",
+          tresDense
+            ? "print:text-[8.5pt] print:leading-tight"
+            : dense
+              ? "print:text-[9.5pt]"
+              : "print:text-[10.5pt]",
+        )}>
+        <div className="flex items-start justify-between border-b-2 border-[#C9A227] pb-4 print:pb-3">
           <div>
             <div className="text-2xl font-bold uppercase tracking-wide text-[#C9A227]">
               {biz.name}
@@ -69,7 +82,7 @@ export default async function DevisPage({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-4 text-sm">
+        <div className="mt-5 grid grid-cols-2 gap-4 text-sm print:mt-4">
           <div>
             <div className="text-xs uppercase tracking-wider text-neutral-400">Client</div>
             <div className="text-lg font-semibold">{q.customer}</div>
@@ -93,7 +106,7 @@ export default async function DevisPage({
           </div>
         </div>
 
-        <table className="mt-6 w-full border-collapse text-sm">
+        <table className="mt-6 w-full border-collapse text-sm print:mt-4">
           <thead>
             <tr className="border-b border-neutral-300 text-left text-xs uppercase text-neutral-500">
               <th className="py-2">Prestation</th>
@@ -102,15 +115,30 @@ export default async function DevisPage({
           </thead>
           <tbody>
             {q.items.map((i) => (
-              <tr key={i.label} className="border-b border-neutral-100">
-                <td className="py-2">{i.label}</td>
-                <td className="py-2 text-right">{eur(i.price)}</td>
+              <tr
+                key={i.label}
+                className={cn(
+                  "border-b border-neutral-100",
+                  tresDense ? "print:text-[8.5pt]" : "",
+                )}
+              >
+                <td className={cn("py-2", tresDense ? "print:py-0" : "print:py-1")}>
+                  {i.label}
+                </td>
+                <td
+                  className={cn(
+                    "py-2 text-right",
+                    tresDense ? "print:py-0" : "print:py-1",
+                  )}
+                >
+                  {eur(i.price)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="mt-4 flex justify-end">
+        <div className="no-break mt-4 flex justify-end print:mt-3">
           <div className="w-64 space-y-1 text-sm">
             <div className="flex justify-between text-neutral-600">
               <span>Sous-total HT</span>
@@ -133,7 +161,7 @@ export default async function DevisPage({
           </div>
         </div>
 
-        <p className="mt-8 border-t border-neutral-200 pt-3 text-[11px] text-neutral-500">
+        <p className="no-break mt-8 border-t border-neutral-200 pt-3 text-[11px] text-neutral-500 print:mt-5">
           Devis valable 30 jours. Prix établis selon la taille du véhicule
           ({SIZE_LABEL[q.size]}). TVA {q.vatRate}% comprise. {biz.name} — {biz.address}.
         </p>

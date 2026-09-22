@@ -54,7 +54,13 @@
 }
 
 /* Impression : masquer la navigation, feuille sur fond blanc */
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
 @media print {
+  html,
   body {
     background: #ffffff !important;
   }
@@ -64,6 +70,32 @@
   }
   main {
     padding: 0 !important;
+  }
+
+  /* La « feuille » (devis, facture, rapport) occupe toute la page :
+     ni marge, ni ombre, ni arrondi — la marge vient de @page. */
+  .sheet {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Documents commerciaux : tenir sur une seule page. Les lignes de
+     prestation et le bloc de totaux ne se coupent jamais en deux. */
+  .sheet--document tr,
+  .sheet--document .no-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Les couleurs de fond (bandeau or, pastille de statut) doivent sortir
+     à l'impression, sinon le document perd sa signature visuelle. */
+  .sheet,
+  .sheet * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 

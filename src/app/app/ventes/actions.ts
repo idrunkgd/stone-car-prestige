@@ -62,6 +62,8 @@ export async function createInvoiceFromQuoteAction(formData: FormData) {
     ref,
     createdAt: new Date().toISOString(),
     customer: q.customer,
+    customerCompany: q.customerCompany,
+    customerVat: q.customerVat,
     vehicleTitle: q.vehicleTitle,
     plate: q.plate,
     size: q.size,

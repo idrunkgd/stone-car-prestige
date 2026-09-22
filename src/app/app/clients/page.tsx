@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { getCustomers, getVehicles } from "@/lib/crm-store";
 import { getAccounts } from "@/lib/auth-store";
 import { getAllCardViews } from "@/lib/subscription-store";
+import { formatVat } from "@/lib/vat";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,8 @@ type Row = {
   phone: string;
   email?: string;
   sources: ("compte" | "fiche")[];
+  company?: string;
+  vatNumber?: string;
   accountId?: string;
   vehicles: string[];
   createdAt: string;
@@ -63,6 +66,8 @@ export default async function ClientsPage() {
     existing.email = existing.email ?? row.email;
     existing.phone = existing.phone || row.phone;
     existing.vehicles = [...new Set([...existing.vehicles, ...row.vehicles])];
+    existing.company = existing.company ?? row.company;
+    existing.vatNumber = existing.vatNumber ?? row.vatNumber;
   };
 
   // Comptes de l'espace client
@@ -73,6 +78,8 @@ export default async function ClientsPage() {
       phone: a.phone,
       email: a.email,
       sources: ["compte"],
+      company: a.kind === "societe" ? a.company : undefined,
+      vatNumber: a.vatNumber,
       accountId: a.id,
       vehicles: a.vehicles.map((v) => v.plate),
       createdAt: a.createdAt,
@@ -84,10 +91,12 @@ export default async function ClientsPage() {
     const name = [c.firstName, c.lastName].filter(Boolean).join(" ").trim();
     merge(key(c.email, c.phone), {
       id: c.id,
-      name: c.company ? `${name} · ${c.company}` : name,
+      name,
       phone: c.phone,
       email: c.email,
       sources: ["fiche"],
+      company: c.company,
+      vatNumber: c.vatNumber,
       vehicles: crmVehicles
         .filter((v) => v.ownerId === c.id)
         .map((v) => v.plate),
@@ -139,8 +148,18 @@ export default async function ClientsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="truncate font-display text-lg uppercase">
-                      {c.name || "Sans nom"}
+                      {c.company || c.name || "Sans nom"}
                     </div>
+                    {c.company && c.name && (
+                      <div className="truncate text-[12px] text-ink-faint">
+                        {c.name}
+                      </div>
+                    )}
+                    {c.vatNumber && (
+                      <div className="text-[12px] text-gold-2">
+                        TVA {formatVat(c.vatNumber)}
+                      </div>
+                    )}
                     <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[12.5px] text-ink-muted">
                       {c.phone && (
                         <a

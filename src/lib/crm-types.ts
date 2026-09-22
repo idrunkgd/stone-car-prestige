@@ -6,6 +6,8 @@ export type StoredCustomer = {
   firstName: string;
   lastName: string;
   company?: string;
+  /** Numéro de TVA normalisé (sociétés). */
+  vatNumber?: string;
   phone: string;
   email?: string;
   createdAt: string;

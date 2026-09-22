@@ -17,6 +17,7 @@ export function NewCustomerForm() {
     phone: "",
     email: "",
     company: "",
+    vatNumber: "",
   });
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -33,6 +34,7 @@ export function NewCustomerForm() {
         phone: f.phone.trim(),
         email: f.email.trim() || undefined,
         company: f.company.trim() || undefined,
+        vatNumber: f.vatNumber.trim() || undefined,
       });
       router.push("/app/clients");
       router.refresh();

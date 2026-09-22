@@ -10,11 +10,14 @@ import {
   setSession,
   clearSession,
   addVehicle,
+  updateAccountProfile,
 } from "@/lib/auth-store";
 import { addRequest, getRequest, updateRequest } from "@/lib/request-store";
 import { getQuote, updateQuote } from "@/lib/quote-store";
 import { createInterventionFromRequest } from "@/lib/checkin-store";
 import { getCardViewsForAccount } from "@/lib/subscription-store";
+import type { AccountKind } from "@/lib/auth-types";
+import { validateVat } from "@/lib/vat";
 import type { VehicleCategory } from "@/lib/demo-data";
 import type { SizeTier } from "@/lib/pricing";
 
@@ -23,6 +26,10 @@ export async function registerAction(input: {
   name: string;
   phone: string;
   password: string;
+  kind?: AccountKind;
+  company?: string;
+  vatNumber?: string;
+  address?: string;
 }) {
   if (!input.email || !input.name || !input.password) {
     return { error: "Merci de remplir tous les champs." };
@@ -30,9 +37,48 @@ export async function registerAction(input: {
   if (await getAccountByEmail(input.email)) {
     return { error: "Un compte existe déjà avec cet email." };
   }
-  const acc = await createAccount(input);
+
+  // Compte société : raison sociale et numéro de TVA vérifiés côté serveur.
+  let vatNumber: string | undefined;
+  if (input.kind === "societe") {
+    if (!input.company?.trim()) {
+      return { error: "Indiquez la raison sociale." };
+    }
+    const v = validateVat(input.vatNumber ?? "");
+    if (!v.ok) return { error: v.error ?? "Numéro de TVA invalide." };
+    vatNumber = v.value;
+  }
+
+  const acc = await createAccount({ ...input, vatNumber });
   await setSession(acc);
   redirect("/compte");
+}
+
+/** Met à jour les informations de facturation du compte connecté. */
+export async function updateProfileAction(input: {
+  name: string;
+  phone: string;
+  kind: AccountKind;
+  company?: string;
+  vatNumber?: string;
+  address?: string;
+}) {
+  const acc = await getCurrentAccount();
+  if (!acc) return { error: "Non connecté." };
+  if (!input.name.trim()) return { error: "Le nom est obligatoire." };
+
+  let vatNumber: string | undefined;
+  if (input.kind === "societe") {
+    if (!input.company?.trim()) return { error: "Indiquez la raison sociale." };
+    const v = validateVat(input.vatNumber ?? "");
+    if (!v.ok) return { error: v.error ?? "Numéro de TVA invalide." };
+    vatNumber = v.value;
+  }
+
+  await updateAccountProfile(acc.id, { ...input, vatNumber });
+  revalidatePath("/compte");
+  revalidatePath("/app/clients");
+  return { ok: true };
 }
 
 export async function loginAction(input: { email: string; password: string }) {

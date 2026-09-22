@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getRequest, updateRequest } from "@/lib/request-store";
 import { addQuote, getQuotes } from "@/lib/quote-store";
 import { VAT_RATE } from "@/lib/pricing";
+import { getAccountById } from "@/lib/auth-store";
+import { billingName } from "@/lib/auth-types";
 
 export async function setNoteAction(id: string, note: string) {
   await updateRequest(id, { note: note.trim() || undefined });
@@ -43,11 +45,17 @@ export async function sendOfficialQuoteAction(requestId: string, acompte: number
   const ref = `DEV-2026-${String(count + 1).padStart(4, "0")}`;
   const id = crypto.randomUUID();
 
+  // Coordonnées de facturation : une société est facturée à sa raison
+  // sociale, avec son numéro de TVA reporté sur le document.
+  const account = r.accountId ? await getAccountById(r.accountId) : null;
+
   await addQuote({
     id,
     ref,
     createdAt: new Date().toISOString(),
-    customer: r.name,
+    customer: account ? billingName(account) : r.name,
+    customerCompany: account?.kind === "societe" ? account.company : undefined,
+    customerVat: account?.vatNumber,
     vehicleTitle: r.vehicleTitle ?? r.vehicle ?? "",
     plate: r.plate ?? "",
     size: r.size ?? "moyenne",

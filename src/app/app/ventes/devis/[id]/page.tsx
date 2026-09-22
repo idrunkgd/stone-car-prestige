@@ -1,3 +1,4 @@
+import { formatVat } from "@/lib/vat";
 import { requireAdminPage } from "@/lib/admin-auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -72,6 +73,11 @@ export default async function DevisPage({
           <div>
             <div className="text-xs uppercase tracking-wider text-neutral-400">Client</div>
             <div className="text-lg font-semibold">{q.customer}</div>
+            {q.customerVat && (
+              <div className="text-sm text-neutral-500">
+                TVA {formatVat(q.customerVat)}
+              </div>
+            )}
           </div>
           <div>
             <div className="text-xs uppercase tracking-wider text-neutral-400">Véhicule</div>

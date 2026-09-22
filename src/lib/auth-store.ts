@@ -1,7 +1,7 @@
 import "server-only";
 import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
-import type { Account, ClientVehicle } from "./auth-types";
+import type { Account, AccountKind, ClientVehicle } from "./auth-types";
 import { listDocs, getDoc, putDoc } from "./db";
 
 const COL = "accounts";
@@ -29,6 +29,10 @@ export async function createAccount(input: {
   name: string;
   phone: string;
   password: string;
+  kind?: AccountKind;
+  company?: string;
+  vatNumber?: string;
+  address?: string;
 }): Promise<Account> {
   const salt = randomBytes(16).toString("hex");
   const account: Account = {
@@ -36,6 +40,10 @@ export async function createAccount(input: {
     email: input.email.trim().toLowerCase(),
     name: input.name.trim(),
     phone: input.phone.trim(),
+    kind: input.kind ?? "particulier",
+    company: input.company?.trim() || undefined,
+    vatNumber: input.vatNumber || undefined,
+    address: input.address?.trim() || undefined,
     passwordHash: hash(input.password, salt),
     salt,
     token: randomBytes(24).toString("hex"),
@@ -72,6 +80,38 @@ export async function getCurrentAccount(): Promise<Account | null> {
   const acc = await getAccountById(id);
   if (!acc || acc.token !== token) return null;
   return acc;
+}
+
+/** Met à jour les informations de facturation d'un compte. */
+export async function updateAccountProfile(
+  accountId: string,
+  patch: {
+    name?: string;
+    phone?: string;
+    kind?: AccountKind;
+    company?: string;
+    vatNumber?: string;
+    address?: string;
+  },
+): Promise<Account | null> {
+  const acc = await getAccountById(accountId);
+  if (!acc) return null;
+  const next: Account = {
+    ...acc,
+    ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+    ...(patch.phone !== undefined ? { phone: patch.phone.trim() } : {}),
+    ...(patch.kind !== undefined ? { kind: patch.kind } : {}),
+    company: patch.company?.trim() || undefined,
+    vatNumber: patch.vatNumber || undefined,
+    address: patch.address?.trim() || undefined,
+  };
+  // Un particulier ne conserve ni raison sociale ni numéro de TVA.
+  if (next.kind === "particulier") {
+    next.company = undefined;
+    next.vatNumber = undefined;
+  }
+  await putDoc(COL, accountId, next);
+  return next;
 }
 
 export async function addVehicle(accountId: string, v: Omit<ClientVehicle, "id">) {

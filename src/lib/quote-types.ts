@@ -7,6 +7,10 @@ export type QuoteRecord = {
   ref: string; // DEV-2026-0001
   createdAt: string;
   customer: string;
+  /** Raison sociale du client, si société. */
+  customerCompany?: string;
+  /** Numéro de TVA du client, reporté sur le document. */
+  customerVat?: string;
   vehicleTitle: string;
   plate: string;
   size: SizeTier;

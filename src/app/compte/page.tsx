@@ -5,7 +5,9 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { Card } from "@/components/ui/Card";
 import { AuthForms } from "@/components/compte/AuthForms";
 import { AddVehicleForm } from "@/components/compte/AddVehicleForm";
+import { ProfileForm } from "@/components/compte/ProfileForm";
 import { getCurrentAccount } from "@/lib/auth-store";
+import { toPublic } from "@/lib/auth-types";
 import { getRequests } from "@/lib/request-store";
 import { getCardViewsForAccount } from "@/lib/subscription-store";
 import { SubscriptionCardVisual } from "@/components/subscription/SubscriptionCardVisual";
@@ -69,6 +71,10 @@ export default async function ComptePage({
                 <Check size={18} /> Devis accepté et acompte payé. Votre intervention est planifiée !
               </div>
             )}
+
+            <div className="mb-6">
+              <ProfileForm account={toPublic(account)} />
+            </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Véhicules */}

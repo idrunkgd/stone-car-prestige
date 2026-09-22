@@ -34,6 +34,11 @@ COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 
+# Scripts de maintenance exécutables depuis le terminal Coolify
+# (ex. : node scripts/nettoyage-clients.cjs). Ils réutilisent le module `pg`
+# déjà présent dans les dépendances tracées par Next.
+COPY --from=build /app/scripts ./scripts
+
 USER nextjs
 EXPOSE 3000
 

@@ -20,3 +20,5 @@ tests/out
 .test-build
 
 tsconfig.tsbuildinfo
+
+scripts/sauvegarde-avant-nettoyage-*.json
